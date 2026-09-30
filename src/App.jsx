@@ -56,6 +56,7 @@ function App() {
   const [aircraft, setAircraft] = useState([])
   const [vessels, setVessels] = useState([])
   const [showHeatmap, setShowHeatmap] = useState(true)
+  const [selectedAssistantModel, setSelectedAssistantModel] = useState('default')
   const [assistantQuestion, setAssistantQuestion] = useState('')
   const [assistantAnswer, setAssistantAnswer] = useState('')
   const [assistantLoading, setAssistantLoading] = useState(false)
@@ -1391,7 +1392,8 @@ const askDashboardAssistant = async () => {
       },
       body: JSON.stringify({
         question: assistantQuestion,
-        dashboard: dashboardData
+        dashboard: dashboardData,
+        model: selectedAssistantModel
       })
     })
 
@@ -1849,6 +1851,24 @@ const askDashboardAssistant = async () => {
 <div className="sectionTitle">AI DASHBOARD ASSISTANT</div>
 
 <div className="card detailCard">
+  <div className="assistantModelSelector" role="group" aria-label="Choose AI model">
+    {[
+      { id: 'default', label: 'Default' },
+      { id: 'modelA', label: 'Model A' },
+      { id: 'modelB', label: 'Model B' }
+    ].map((model) => (
+      <button
+        key={model.id}
+        type="button"
+        className={selectedAssistantModel === model.id ? 'assistantModelButton active' : 'assistantModelButton'}
+        aria-pressed={selectedAssistantModel === model.id}
+        onClick={() => setSelectedAssistantModel(model.id)}
+      >
+        {model.label}
+      </button>
+    ))}
+  </div>
+
   <textarea
     value={assistantQuestion}
     onChange={(e) => setAssistantQuestion(e.target.value)}

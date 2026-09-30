@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import process from 'node:process'
 
 const app = express()
 
@@ -29,15 +30,35 @@ function removeRenderData(value) {
   return value
 }
 
+const defaultModel = process.env.OLLAMA_MODEL || 'llama3.1'
+const modelProfiles = {
+  default: {
+    model: defaultModel,
+    options: { temperature: 0.2 }
+  },
+  modelA: {
+    model: process.env.OLLAMA_MODEL_A || defaultModel,
+    options: { temperature: 0, top_k: 1, seed: 42 }
+  },
+  modelB: {
+    model: process.env.OLLAMA_MODEL_B || 'qwen2.5:3b',
+    options: { temperature: 0.8, top_k: 40, top_p: 0.9 }
+  }
+}
 
 app.post('/api/assistant', async (req, res) => {
   try {
-    const { question, dashboard } = req.body
+    const { question, dashboard, model = 'default' } = req.body
 
     if (typeof question !== 'string' || !question.trim() || dashboard == null) {
       return res.status(400).json({
         error: 'Missing question or dashboard data'
       })
+    }
+
+    const profile = modelProfiles[model]
+    if (!profile) {
+      return res.status(400).json({ error: 'Unknown assistant model' })
     }
 
     const dashboardData = removeRenderData(dashboard)
@@ -48,9 +69,9 @@ app.post('/api/assistant', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: process.env.OLLAMA_MODEL || 'llama3.1',
+        model: profile.model,
         stream: false,
-        options: { temperature: 0.2 },
+        options: profile.options,
         messages: [
           {
             role: 'system',
